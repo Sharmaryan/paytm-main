@@ -18,6 +18,12 @@ const signinBody = zod.object({
   password: zod.string(),
 });
 
+const updateBody = zod.object({
+  password: zod.string().optional(),
+  firstName: zod.string().optional(),
+  lastName: zod.string().optional(),
+});
+
 router.post("/signup", async (req, res) => {
   const payload = req.body;
   const username = payload.username;
@@ -61,22 +67,41 @@ router.post("/signin", async (req, res) => {
   }
 });
 
-router.put('/', authMiddleware, async (req, res) => {
-  const _id = req.userId
-  const update = {};
-  for (const key of Object.keys(req.body)) {
-    if (req.body[key] !== '') {
-      update[key] = req.body[key];
-    }
+router.put("/", authMiddleware, async (req, res) => {
+  const { success } = updateBody.safeParse(req.body);
+  if (!success) {
+    res.status(411).json({
+      message: "Error while updating information",
+    });
   }
+  const _id = req.userId;
   try {
-    const user = await User.findOneAndUpdate({ _id }, { $set: update },)
-    console.log(user)
-    res.status(200).json({ message: 'Updated Successfuly' })
+    const user = await User.updateOne({ _id }, req.body);
+    console.log(user);
+    res.status(200).json({ message: "Updated Successfuly" });
+  } catch (err) {
+    res.status(411).json({ message: "Error while updating" });
   }
-  catch (err) {
-    res.status(411).json({ message: "Error while updating" })
-  }
-})
+});
+
+router.get("/bulk", async (req, res) => {
+  const filter = req.query.filter;
+  await User.find({
+    $or: [
+      {
+        firstName: {
+          $regex: filter,
+        },
+      },
+      {
+        lastName: {
+          $regex: filter,
+        },
+      },
+    ],
+  })
+    .then((user) => res.status(200).json({ user }))
+    .catch((err) => res.status(411).json({ message: "user not found" }));
+});
 
 module.exports = router;
