@@ -100,7 +100,7 @@ router.get("/bulk", async (req, res) => {
       },
     ],
   })
-    .then((user) => res.status(200).json({ user }))
+    .then((user) => res.status(200).json({ user: user.map(user => ({ username: user.username, firstName: user.firstName, lastName: user.lastName, _id: user._id })) }))
     .catch((err) => res.status(411).json({ message: "user not found" }));
 });
 
