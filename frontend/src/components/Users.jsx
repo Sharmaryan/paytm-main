@@ -1,20 +1,28 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "./Button"
+import axios from "axios";
+import { localhost } from "../localhost";
 
 export const Users = () => {
-    // Replace with backend call
-    const [users, setUsers] = useState([{
-        firstName: "Harkirat",
-        lastName: "Singh",
-        _id: 1
-    }]);
+    const [users, setUsers] = useState([]);
+    const [filter, setFilter] = useState('');
+
+    useEffect(() => {
+        axios.get(`${localhost}/api/v1/user/bulk?filter=${filter}`).then((resp) => {
+            setUsers(resp.data.user)
+        }).catch((err) => {
+            console.log(err)
+        })
+    }, [filter])
 
     return <>
         <div className="font-bold mt-6 text-lg">
             Users
         </div>
         <div className="my-2">
-            <input type="text" placeholder="Search users..." className="w-full px-2 py-1 border rounded border-slate-200"></input>
+            <input type="text" placeholder="Search users..." className="w-full px-2 py-1 border rounded border-slate-200" onChange={(e) => {
+                setFilter(e.target.value)
+            }}></input>
         </div>
         <div>
             {users.map(user => <User user={user} />)}
